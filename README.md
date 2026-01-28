@@ -1,66 +1,61 @@
-## Foundry
+# Signal Emitter
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+**On-chain steganography for the Base ecosystem.**
+Encoding human-readable intent into the raw `value` of native ETH transfers.
 
-Foundry consists of:
+> "Simplicity is the ultimate sophistication."
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+---
 
-## Documentation
+## The Concept
 
-https://book.getfoundry.sh/
+Standard on-chain communication relies on `calldata` or `events`, which consume extra gas and leave a visible footprint. 
+**Critique:** In a minimalist architecture, every byte counts. If we only need to signal a state or a simple "handshake," using data fields is overkill.
 
-## Usage
+## The Solution: Value Steganography
 
-### Build
+**Signal Emitter** utilizes the native `value` field of an Ethereum transaction to carry data. By sending an exact amount of Wei, we can transmit ASCII messages that are invisible to the casual observer but clear to anyone viewing the blockchain through a hex-lens.
 
-```shell
-$ forge build
+For example, the amount **284,558,263,620 Wei** is functionally "dust" (fractions of a cent), but its hexadecimal representation is `0x4241534544`, which decodes directly to the word **"BASED"**.
+
+---
+
+## Architecture
+
+
+
+```mermaid
+graph LR
+    User((User)) -- "emitSignal(target)" --> Emitter[SignalEmitter]
+    Emitter -- "Exact Wei Transfer" --> Target((Target))
+    
+    subgraph "Decoding Process"
+    Target -- "Value in Wei" --> Hex[Hexadecimal]
+    Hex -- "ASCII" --> Message[BASED]
+    end
+
 ```
 
-### Test
+---
 
-```shell
-$ forge test
-```
+## Design Philosophy
 
-### Format
+1. **Zero-Data Overhead:** No `calldata` is used for the message itself.
+2. **First Principles:** Utilizing the core economic layer (ETH transfer) as a communication channel.
+3. **Resilience:** The contract ignores refund failures to ensure the primary signal is always delivered, regardless of the sender's wallet complexity.
 
-```shell
-$ forge fmt
-```
+---
 
-### Gas Snapshots
+## Tech Stack
 
-```shell
-$ forge snapshot
-```
+* **Language:** Solidity 0.8.26
+* **Framework:** Foundry
+* **Network:** Base Mainnet
 
-### Anvil
+## License
 
-```shell
-$ anvil
-```
+MIT
 
-### Deploy
+### Author
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+Built with 💙 by [Roman](https://www.linkedin.com/in/tilmatochek/).

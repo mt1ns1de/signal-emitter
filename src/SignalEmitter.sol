@@ -14,18 +14,25 @@ contract SignalEmitter {
 
     receive() external payable {}
 
+    /**
+     * @notice Emits a predefined signal to a target address.
+     * @param _target The recipient of the encoded wei amount.
+     */
     function emitSignal(address payable _target) external {
         require(address(this).balance >= BASED_SIGNAL, "Insufficient fuel");
 
+        // Low-level call to send the exact signal amount
         (bool success, ) = _target.call{value: BASED_SIGNAL}("");
         require(success, "Signal blocked");
 
         emit SignalSent(_target, BASED_SIGNAL);
 
+        // Attempt to refund remaining dust. 
+        // We don't use require here to prevent the "Signal" from failing 
+        // if the sender's wallet doesn't have a receive() function.
         uint256 remainder = address(this).balance;
         if (remainder > 0) {
-            (bool refundSuccess, ) = msg.sender.call{value: remainder}("");
-            require(refundSuccess, "Refund failed");
+            msg.sender.call{value: remainder}("");
         }
     }
 }
